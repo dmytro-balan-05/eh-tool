@@ -2,7 +2,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { parseCarriers } from "@/lib/parseCarriers";
 
+type Warehouse = { id: string; code: string; city: string | null; address: string };
+
 export default function Home() {
+    const [mode, setMode] = useState<"domestic" | "international">("domestic");
     const [vin, setVin] = useState("");
     const [year, setYear] = useState("");
     const [make, setMake] = useState("");
@@ -18,7 +21,25 @@ export default function Home() {
     const [theme, setTheme] = useState<"light" | "dark">("light");
     const lastDecoded = useRef("");
 
-    // Theme init: saved choice or system
+    // Warehouses
+    const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
+    const [warehouseId, setWarehouseId] = useState("");
+    const [showManage, setShowManage] = useState(false);
+    const [newCode, setNewCode] = useState("");
+    const [newCity, setNewCity] = useState("");
+    const [newAddress, setNewAddress] = useState("");
+    const [whError, setWhError] = useState("");
+
+    async function loadWarehouses() {
+        try {
+            const res = await fetch("/api/warehouses");
+            const data = await res.json();
+            if (Array.isArray(data)) setWarehouses(data);
+        } catch {}
+    }
+    useEffect(() => { loadWarehouses(); }, []);
+
+    // Theme
     useEffect(() => {
         const saved = localStorage.getItem("theme");
         const initial =
@@ -29,7 +50,6 @@ export default function Home() {
                     : "light";
         setTheme(initial as "light" | "dark");
     }, []);
-
     useEffect(() => {
         document.documentElement.classList.toggle("dark", theme === "dark");
         localStorage.setItem("theme", theme);
@@ -37,13 +57,21 @@ export default function Home() {
 
     const carriers = useMemo(() => parseCarriers(raw), [raw]);
     const vehicle = [year, make, model].filter(Boolean).join(" ");
+    const selectedWarehouse = warehouses.find((w) => w.id === warehouseId);
+
+    const destination =
+        mode === "international"
+            ? selectedWarehouse
+                ? `${selectedWarehouse.code} ${selectedWarehouse.address}`
+                : ""
+            : delivery;
 
     const note = carriers.length
         ? "Offered to:\n" + carriers.map((c) => `${c.companyName} ${c.phone}`).join("\n")
         : "";
 
     const message =
-        `Hello. Can you pick up ${vehicle || "___"} from ${pickup || "___"} to ${delivery || "___"} for ACH payment $${price || "___"}.` +
+        `Hello. Can you pick up ${vehicle || "___"} from ${pickup || "___"} to ${destination || "___"} for ACH payment $${price || "___"}.` +
         (lot.trim() ? ` Lot#${lot.trim()}` : "");
 
     async function decodeVin(vinValue?: string) {
@@ -68,11 +96,38 @@ export default function Home() {
     }
 
     useEffect(() => {
-        if (vin.trim().length === 17 && vin.trim() !== lastDecoded.current) {
-            decodeVin(vin);
-        }
+        if (vin.trim().length === 17 && vin.trim() !== lastDecoded.current) decodeVin(vin);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [vin]);
+
+    async function addWarehouse() {
+        setWhError("");
+        const code = newCode.trim(), city = newCity.trim(), address = newAddress.trim();
+        if (!code || !address) { setWhError("Code and address are required"); return; }
+        try {
+            const res = await fetch("/api/warehouses", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ code, city, address }),
+            });
+            const data = await res.json();
+            if (!res.ok) { setWhError(data.error || "Failed"); return; }
+            setNewCode(""); setNewCity(""); setNewAddress("");
+            await loadWarehouses();
+            setWarehouseId(data.id);
+        } catch {
+            setWhError("Network error");
+        }
+    }
+
+    async function deleteWarehouse(id: string) {
+        if (!confirm("Delete this warehouse?")) return;
+        try {
+            await fetch(`/api/warehouses?id=${id}`, { method: "DELETE" });
+            if (warehouseId === id) setWarehouseId("");
+            await loadWarehouses();
+        } catch {}
+    }
 
     async function copy(key: string, text: string) {
         try {
@@ -121,6 +176,23 @@ export default function Home() {
             </header>
 
             <main className="mx-auto max-w-3xl space-y-5 px-4 py-6">
+                {/* Mode toggle */}
+                <div className="inline-flex rounded-lg border border-gray-300 p-0.5 dark:border-gray-700">
+                    {(["domestic", "international"] as const).map((m) => (
+                        <button
+                            key={m}
+                            onClick={() => setMode(m)}
+                            className={`rounded-md px-4 py-1.5 text-sm font-medium capitalize transition ${
+                                mode === m
+                                    ? "bg-teal-600 text-white"
+                                    : "text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+                            }`}
+                        >
+                            {m}
+                        </button>
+                    ))}
+                </div>
+
                 {/* Vehicle */}
                 <section className={card}>
                     <label className={label}>VIN</label>
@@ -174,21 +246,87 @@ export default function Home() {
                             <label className={label}>From (opt.)</label>
                             <input value={pickup} onChange={(e) => setPickup(e.target.value)} className={input} placeholder="Copart CA - Long Beach" />
                         </div>
-                        <div>
-                            <label className={label}>To (opt.)</label>
-                            <input value={delivery} onChange={(e) => setDelivery(e.target.value)} className={input} placeholder="MTL-TX" />
-                        </div>
+                        {mode === "domestic" && (
+                            <div>
+                                <label className={label}>To (opt.)</label>
+                                <input value={delivery} onChange={(e) => setDelivery(e.target.value)} className={input} placeholder="MTL-TX" />
+                            </div>
+                        )}
                         <div>
                             <label className={label}>Price $</label>
                             <input value={price} onChange={(e) => setPrice(e.target.value)} className={input} placeholder="1200" />
                         </div>
                     </div>
+
+                    {/* Warehouse (international only) */}
+                    {mode === "international" && (
+                        <div className="mt-3">
+                            <div className="mb-1 flex items-center justify-between">
+                                <label className={label + " mb-0"}>Warehouse (To)</label>
+                                <button
+                                    onClick={() => setShowManage((s) => !s)}
+                                    className="text-xs text-teal-600 hover:underline dark:text-teal-400"
+                                >
+                                    {showManage ? "Close" : "Manage"}
+                                </button>
+                            </div>
+                            <select
+                                value={warehouseId}
+                                onChange={(e) => setWarehouseId(e.target.value)}
+                                className={input}
+                            >
+                                <option value="">— select warehouse —</option>
+                                {warehouses.map((w) => (
+                                    <option key={w.id} value={w.id}>
+                                        {w.code}{w.city ? ` — ${w.city}` : ""}
+                                    </option>
+                                ))}
+                            </select>
+                            {selectedWarehouse && (
+                                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{selectedWarehouse.address}</p>
+                            )}
+
+                            {showManage && (
+                                <div className="mt-3 rounded-lg border border-gray-200 p-3 dark:border-gray-700">
+                                    <ul className="mb-3 space-y-1">
+                                        {warehouses.map((w) => (
+                                            <li key={w.id} className="flex items-center justify-between text-sm">
+                        <span>
+                          <span className="font-medium">{w.code}</span>{" "}
+                            <span className="text-gray-500 dark:text-gray-400">{w.address}</span>
+                        </span>
+                                                <button
+                                                    onClick={() => deleteWarehouse(w.id)}
+                                                    className="ml-2 rounded px-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-950"
+                                                    title="Delete"
+                                                >
+                                                    ✕
+                                                </button>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        <input value={newCode} onChange={(e) => setNewCode(e.target.value)} className={input} placeholder="Code (MTL-XX)" />
+                                        <input value={newCity} onChange={(e) => setNewCity(e.target.value)} className={input} placeholder="City (opt.)" />
+                                        <input value={newAddress} onChange={(e) => setNewAddress(e.target.value)} className={input} placeholder="Full address" />
+                                    </div>
+                                    {whError && <p className="mt-1.5 text-xs text-red-600 dark:text-red-400">{whError}</p>}
+                                    <button
+                                        onClick={addWarehouse}
+                                        className="mt-2 rounded-lg bg-teal-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-teal-700"
+                                    >
+                                        Add warehouse
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </section>
 
                 {/* Carriers */}
                 <section className={card}>
                     <div className="mb-1 flex items-center justify-between">
-                        <label className={label + " mb-0"}>Carriers — paste from ACP</label>
+                        <label className={label + " mb-0"}>Carriers — paste from ASR</label>
                         {carriers.length > 0 && (
                             <span className="text-xs font-medium text-teal-600 dark:text-teal-400">Detected: {carriers.length}</span>
                         )}
@@ -205,7 +343,7 @@ export default function Home() {
                 {/* Outputs */}
                 <div className="space-y-4">
                     {note && (
-                        <OutputBlock label="ACP Note" text={note} keyName="note" copied={copied} onCopy={copy} />
+                        <OutputBlock label="ASR Note" text={note} keyName="note" copied={copied} onCopy={copy} />
                     )}
                     <OutputBlock label="Driver Message" text={message} keyName="msg" copied={copied} onCopy={copy} />
                 </div>

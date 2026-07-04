@@ -40,3 +40,11 @@ model OfferRecipient {
   phone       String
   createdAt   DateTime @default(now())
 }
+
+model Warehouse {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  city      String?
+  address   String
+  createdAt DateTime @default(now())
+}
