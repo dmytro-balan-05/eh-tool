@@ -326,7 +326,7 @@ export default function Home() {
                 {/* Carriers */}
                 <section className={card}>
                     <div className="mb-1 flex items-center justify-between">
-                        <label className={label + " mb-0"}>Carriers — paste from ASR</label>
+                        <label className={label + " mb-0"}>Carriers - paste from ACP</label>
                         {carriers.length > 0 && (
                             <span className="text-xs font-medium text-teal-600 dark:text-teal-400">Detected: {carriers.length}</span>
                         )}
@@ -343,7 +343,7 @@ export default function Home() {
                 {/* Outputs */}
                 <div className="space-y-4">
                     {note && (
-                        <OutputBlock label="ASR Note" text={note} keyName="note" copied={copied} onCopy={copy} />
+                        <OutputBlock label="ACP Note" text={note} keyName="note" copied={copied} onCopy={copy} />
                     )}
                     <OutputBlock label="Driver Message" text={message} keyName="msg" copied={copied} onCopy={copy} />
                 </div>
