@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { parseCarriers } from "@/lib/parseCarriers";
-
+import { parseCarriers } from "@/features/offer/lib/parseCarriers";
 type Warehouse = { id: string; code: string; city: string | null; address: string };
 
 export default function Home() {
