@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-
+import { prisma } from "@/server/db";
 export async function GET() {
     const warehouses = await prisma.warehouse.findMany({ orderBy: { code: "asc" } });
     return NextResponse.json(warehouses);
