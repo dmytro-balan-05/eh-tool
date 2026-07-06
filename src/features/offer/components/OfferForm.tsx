@@ -1,6 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import { parseCarriers } from "../lib/parseCarriers";
+import { parseAsrOrder } from "../lib/parseAsrOrder";
 import { useTheme } from "../hooks/useTheme";
 import { useVinDecoder } from "../hooks/useVinDecoder";
 import { useWarehouses } from "../hooks/useWarehouses";
@@ -26,6 +27,10 @@ export function OfferForm() {
     const [warehouseId, setWarehouseId] = useState("");
     const [copied, setCopied] = useState<string | null>(null);
 
+    // ASR paste panel
+    const [showAsr, setShowAsr] = useState(false);
+    const [asrText, setAsrText] = useState("");
+
     const carriers = useMemo(() => parseCarriers(raw), [raw]);
     const selectedWarehouse = warehouses.find((w) => w.id === warehouseId);
 
@@ -44,6 +49,19 @@ export function OfferForm() {
         `Hello. Can you pick up ${vind.vehicle || "___"} from ${pickup || "___"} to ${destination || "___"} for ACH payment $${price || "___"}.` +
         (lot.trim() ? ` Lot#${lot.trim()}` : "");
 
+    function applyAsr(text: string) {
+        setAsrText(text);
+        const parsed = parseAsrOrder(text);
+        if (parsed.vin) {
+            vind.setVin(parsed.vin);
+            vind.decodeVin(parsed.vin);
+        }
+        if (parsed.lot) setLot(parsed.lot);
+        if (parsed.price) setPrice(parsed.price);
+        if (parsed.origin) setPickup(parsed.origin);
+        if (parsed.destination) setDelivery(parsed.destination);
+    }
+
     async function copy(key: string, text: string) {
         try {
             await navigator.clipboard.writeText(text);
@@ -55,6 +73,7 @@ export function OfferForm() {
     function resetAll() {
         vind.reset();
         setLot(""); setPickup(""); setDelivery(""); setPrice(""); setRaw("");
+        setAsrText("");
     }
 
     async function deleteWarehouse(id: string) {
@@ -67,42 +86,76 @@ export function OfferForm() {
         <div className="min-h-screen bg-gray-100 text-gray-900 dark:bg-gray-950 dark:text-gray-100">
             <Header theme={theme} onToggleTheme={toggle} onReset={resetAll} />
 
-            <main className="mx-auto max-w-3xl space-y-5 px-4 py-6">
-                <ModeToggle mode={mode} onChange={setMode} />
+            <main className="mx-auto max-w-5xl px-4 py-6">
+                <div className="flex gap-4">
+                    {/* Left: the form */}
+                    <div className="flex-1 space-y-5">
+                        <div className="flex items-center justify-between">
+                            <ModeToggle mode={mode} onChange={setMode} />
+                            <button
+                                onClick={() => setShowAsr((s) => !s)}
+                                className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-teal-600 hover:bg-gray-50 dark:border-gray-700 dark:text-teal-400 dark:hover:bg-gray-800"
+                            >
+                                {showAsr ? "Close ACP" : "Paste from ACP"}
+                            </button>
+                        </div>
 
-                <VehicleSection
-                    vin={vind.vin}
-                    setVin={vind.setVin}
-                    year={vind.year}
-                    make={vind.make}
-                    model={vind.model}
-                    decoding={vind.decoding}
-                    decodeError={vind.decodeError}
-                    vehicle={vind.vehicle}
-                    onDecode={() => vind.decodeVin()}
-                />
+                        <VehicleSection
+                            vin={vind.vin}
+                            setVin={vind.setVin}
+                            year={vind.year}
+                            make={vind.make}
+                            model={vind.model}
+                            decoding={vind.decoding}
+                            decodeError={vind.decodeError}
+                            vehicle={vind.vehicle}
+                            onDecode={() => vind.decodeVin()}
+                        />
 
-                <DetailsSection
-                    mode={mode}
-                    lot={lot} setLot={setLot}
-                    pickup={pickup} setPickup={setPickup}
-                    delivery={delivery} setDelivery={setDelivery}
-                    price={price} setPrice={setPrice}
-                    warehouses={warehouses}
-                    warehouseId={warehouseId}
-                    setWarehouseId={setWarehouseId}
-                    selectedWarehouse={selectedWarehouse}
-                    onAddWarehouse={add}
-                    onDeleteWarehouse={deleteWarehouse}
-                />
+                        <DetailsSection
+                            mode={mode}
+                            lot={lot} setLot={setLot}
+                            pickup={pickup} setPickup={setPickup}
+                            delivery={delivery} setDelivery={setDelivery}
+                            price={price} setPrice={setPrice}
+                            warehouses={warehouses}
+                            warehouseId={warehouseId}
+                            setWarehouseId={setWarehouseId}
+                            selectedWarehouse={selectedWarehouse}
+                            onAddWarehouse={add}
+                            onDeleteWarehouse={deleteWarehouse}
+                        />
 
-                <CarriersSection raw={raw} setRaw={setRaw} detected={carriers.length} />
+                        <CarriersSection raw={raw} setRaw={setRaw} detected={carriers.length} />
 
-                <div className="space-y-4">
-                    {note && (
-                        <OutputBlock label="ACP Note" text={note} keyName="note" copied={copied} onCopy={copy} />
+                        <div className="space-y-4">
+                            {note && (
+                                <OutputBlock label="ACP Note" text={note} keyName="note" copied={copied} onCopy={copy} />
+                            )}
+                            <OutputBlock label="Driver Message" text={message} keyName="msg" copied={copied} onCopy={copy} />
+                        </div>
+                    </div>
+
+                    {/* Right: ASR paste panel */}
+                    {showAsr && (
+                        <div className="w-80 shrink-0">
+                            <div className="sticky top-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                                <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                                    Paste order from ACP
+                                </label>
+                                <p className="mb-2 text-[11px] text-gray-400 dark:text-gray-500">
+                                    Domestic only. Fills VIN, price, lot#, from/to.
+                                </p>
+                                <textarea
+                                    value={asrText}
+                                    onChange={(e) => applyAsr(e.target.value)}
+                                    onFocus={(e) => e.target.select()}
+                                    className="h-96 w-full resize-y rounded-lg border border-gray-300 bg-white px-3 py-2 font-mono text-xs text-gray-900 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                                    placeholder="Paste the copied order row here…"
+                                />
+                            </div>
+                        </div>
                     )}
-                    <OutputBlock label="Driver Message" text={message} keyName="msg" copied={copied} onCopy={copy} />
                 </div>
             </main>
         </div>

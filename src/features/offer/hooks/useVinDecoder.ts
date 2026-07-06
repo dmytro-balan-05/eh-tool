@@ -14,6 +14,13 @@ export function useVinDecoder() {
         if (v.length < 11 || decoding || v === lastDecoded.current) return;
         lastDecoded.current = v;
         setDecodeError("");
+        if (v.length < 17) {
+            setYear("");
+            setMake("");
+            setModel("");
+            setDecodeError("Old VIN — enter make/model/year manually");
+            return;
+        }
         setDecoding(true);
         try {
             const res = await fetch(`/api/decode-vin?vin=${encodeURIComponent(v)}`);
