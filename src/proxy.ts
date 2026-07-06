@@ -5,15 +5,20 @@ const { auth } = NextAuth(authConfig);
 
 export default auth((req) => {
     const isLoggedIn = !!req.auth;
-    const isOnLogin = req.nextUrl.pathname === "/login";
+    const mustChange = !!(req.auth?.user as { mustChangePassword?: boolean } | undefined)?.mustChangePassword;
+    const path = req.nextUrl.pathname;
+    const isOnLogin = path === "/login";
+    const isOnChangePassword = path === "/change-password";
 
-    // Не залогинен и идёт не на /login → на страницу входа
     if (!isLoggedIn && !isOnLogin) {
         return Response.redirect(new URL("/login", req.nextUrl));
     }
 
-    // Уже залогинен, но открыл /login → на главную
-    if (isLoggedIn && isOnLogin) {
+    if (isLoggedIn && mustChange && !isOnChangePassword) {
+        return Response.redirect(new URL("/change-password", req.nextUrl));
+    }
+
+    if (isLoggedIn && !mustChange && (isOnLogin || isOnChangePassword)) {
         return Response.redirect(new URL("/", req.nextUrl));
     }
 });

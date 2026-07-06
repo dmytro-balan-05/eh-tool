@@ -1,4 +1,5 @@
 "use client";
+import { AuthMenu } from "@/features/auth/components/AuthMenu";
 
 type Props = {
     theme: "light" | "dark";
@@ -12,6 +13,7 @@ export function Header({ theme, onToggleTheme, onReset }: Props) {
             <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
                 <h1 className="text-lg font-semibold">Vehicle Offer</h1>
                 <div className="flex items-center gap-2">
+                    <AuthMenu />
                     <button
                         onClick={onToggleTheme}
                         className="rounded-lg border border-gray-300 px-2.5 py-1.5 text-sm hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
