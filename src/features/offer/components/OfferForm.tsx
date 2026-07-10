@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { parseCarriers } from "../lib/parseCarriers";
 import { parseAsrOrder } from "../lib/parseAsrOrder";
 import { useTheme } from "../hooks/useTheme";
@@ -27,9 +27,10 @@ export function OfferForm() {
     const [warehouseId, setWarehouseId] = useState("");
     const [copied, setCopied] = useState<string | null>(null);
 
-    // ASR paste panel
     const [showAsr, setShowAsr] = useState(false);
     const [asrText, setAsrText] = useState("");
+
+    const savedVins = useRef<Set<string>>(new Set());
 
     const carriers = useMemo(() => parseCarriers(raw), [raw]);
     const selectedWarehouse = warehouses.find((w) => w.id === warehouseId);
@@ -49,6 +50,14 @@ export function OfferForm() {
         `Hello. Can you pick up ${vind.vehicle || "___"} from ${pickup || "___"} to ${destination || "___"} for ACH payment $${price || "___"}.` +
         (lot.trim() ? ` Lot#${lot.trim()}` : "");
 
+    const offerComplete =
+        vind.vin.trim().length > 0 &&
+        vind.vehicle.trim().length > 0 &&
+        pickup.trim().length > 0 &&
+        destination.trim().length > 0 &&
+        price.trim().length > 0 &&
+        note.length > 0;
+
     function applyAsr(text: string) {
         setAsrText(text);
         const parsed = parseAsrOrder(text);
@@ -62,12 +71,35 @@ export function OfferForm() {
         if (parsed.destination) setDelivery(parsed.destination);
     }
 
+    async function saveOffer() {
+        const vin = vind.vin.trim().toUpperCase();
+        if (savedVins.current.has(vin)) return;
+        savedVins.current.add(vin);
+        try {
+            await fetch("/api/offers", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    vin,
+                    make: vind.make,
+                    model: vind.model,
+                    year: vind.year,
+                    price,
+                    lotNumber: lot,
+                    pickupPlace: pickup,
+                    deliveryPlace: destination,
+                }),
+            });
+        } catch {}
+    }
+
     async function copy(key: string, text: string) {
         try {
             await navigator.clipboard.writeText(text);
             setCopied(key);
             setTimeout(() => setCopied((k) => (k === key ? null : k)), 1500);
         } catch {}
+        if (key === "msg" && offerComplete) saveOffer();
     }
 
     function resetAll() {
@@ -88,7 +120,6 @@ export function OfferForm() {
 
             <main className="mx-auto max-w-5xl px-4 py-6">
                 <div className="flex gap-4">
-                    {/* Left: the form */}
                     <div className="flex-1 space-y-5">
                         <div className="flex items-center justify-between">
                             <ModeToggle mode={mode} onChange={setMode} />
@@ -136,7 +167,6 @@ export function OfferForm() {
                         </div>
                     </div>
 
-                    {/* Right: ASR paste panel */}
                     {showAsr && (
                         <div className="w-80 shrink-0">
                             <div className="sticky top-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
