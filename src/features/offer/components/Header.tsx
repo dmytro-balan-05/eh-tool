@@ -13,11 +13,16 @@ export function Header({ theme, onToggleTheme, onReset }: Props) {
             <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
                 <h1 className="text-lg font-semibold">Vehicle Offer</h1>
                 <div className="flex items-center gap-2">
-<a
+                    <a href="/offers"
+                       className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                    >
+                        My Offers
+                    </a>
+                    <a
                     href="/how-to"
                     className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800" >
                     How to use
-                </a>
+                    </a>
                 <AuthMenu />
                     <button
                         onClick={onToggleTheme}
