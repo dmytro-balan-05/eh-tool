@@ -4,7 +4,7 @@ import { useRequests, type RequestSource, type RequestStatus } from "../hooks/us
 import { parseRequestsBlock } from "../lib/parseRequests";
 import { RequestCard } from "./RequestCard";
 
-type Filter = "ALL" | "NEW" | "FOLLOWUP" | "RESOLVED";
+type Filter = "ACTIVE" | "ALL" | "NEW" | "FOLLOWUP" | "RESOLVED";
 
 function PasteBox({
                       label,
@@ -57,7 +57,7 @@ function PasteBox({
 
 export function RequestsBoard() {
     const { requests, loading, create, update, remove } = useRequests();
-    const [filter, setFilter] = useState<Filter>("ALL");
+    const [filter, setFilter] = useState<Filter>("ACTIVE");
 
     async function addFrom(source: RequestSource, text: string) {
         const parsed = parseRequestsBlock(text);
@@ -73,6 +73,7 @@ export function RequestsBoard() {
     }
 
     const filtered = useMemo(() => {
+        if (filter === "ACTIVE") return requests.filter((r) => r.status !== "RESOLVED");
         if (filter === "ALL") return requests;
         if (filter === "NEW") return requests.filter((r) => r.status === "NEW");
         if (filter === "FOLLOWUP") return requests.filter((r) => r.status === "CALLED_NO_ANSWER");
@@ -115,10 +116,11 @@ export function RequestsBoard() {
             </div>
 
             <div className="flex gap-1.5">
-                {tab("ALL", "All")}
+                {tab("ACTIVE", "Active")}
                 {tab("NEW", "New")}
                 {tab("FOLLOWUP", "Follow-up")}
-                {tab("RESOLVED", "Resolved")}
+                {tab("RESOLVED", "Archive")}
+                {tab("ALL", "All")}
             </div>
 
             <div className="space-y-2.5">
