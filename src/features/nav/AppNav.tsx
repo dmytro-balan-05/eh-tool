@@ -7,8 +7,10 @@ import { useTheme } from "@/features/offer/hooks/useTheme";
 const TABS = [
     { href: "/", label: "Offer" },
     { href: "/requests", label: "Requests" },
+    { href: "/report", label: "Report" },
     { href: "/offers", label: "My Offers" },
     { href: "/how-to", label: "How to use" },
+
 ];
 
 export function AppNav() {
