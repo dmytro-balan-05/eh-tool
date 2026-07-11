@@ -18,6 +18,8 @@ model User {
   offers             Offer[]
   requests           Request[]
   createdAt          DateTime  @default(now())
+  reports            Report[]
+  routines           Routine[]
 }
 model Request {
   id         String          @id @default(cuid())
@@ -96,4 +98,50 @@ enum RequestActionType {
   CALLED_NO_ANSWER
   TEXTED
   RESOLVED
+}
+model Report {
+  id        String        @id @default(cuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id])
+  date      String
+  blocks    ReportBlock[]
+  createdAt DateTime      @default(now())
+
+  @@unique([userId, date])
+}
+
+model ReportBlock {
+  id          String        @id @default(cuid())
+  reportId    String
+  report      Report        @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  section     ReportSection
+  kind        BlockKind     @default(MANUAL)
+  text        String
+  vin         String?
+  sortOrder   Int           @default(0)
+  carriedFrom String?
+  createdAt   DateTime      @default(now())
+}
+
+model Routine {
+  id        String        @id @default(cuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id])
+  text      String
+  section   ReportSection @default(PLAN)
+  active    Boolean       @default(true)
+  sortOrder Int           @default(0)
+  createdAt DateTime      @default(now())
+}
+
+enum ReportSection {
+  DONE
+  PLAN
+  BLOCKERS
+}
+
+enum BlockKind {
+  MANUAL
+  AUTO
+  ROUTINE
 }
