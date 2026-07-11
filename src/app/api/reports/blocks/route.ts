@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/features/auth/auth";
-import { addBlock, updateBlock, deleteBlock } from "@/features/reports/report.service";
-
+import { addBlock, updateBlock, deleteBlock, reorderBlocks } from "@/features/reports/report.service";
 async function userId() {
     const session = await auth();
     return session?.user?.id ?? null;
@@ -45,4 +44,12 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ ok: true });
 }
 
+export async function PUT(req: NextRequest) {
+    const uid = await userId();
+    if (!uid) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const body = await req.json().catch(() => null);
+    const items = Array.isArray(body?.items) ? body.items : null;
+    if (!items) return NextResponse.json({ error: "items[] required" }, { status: 400 });
+    return NextResponse.json(await reorderBlocks(uid, items));
+}
 export const dynamic = "force-dynamic";

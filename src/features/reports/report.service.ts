@@ -140,3 +140,29 @@ export async function assembleDraft(userId: string, date: string) {
 
     return getOrCreateReport(userId, date);
 }
+export async function reorderBlocks(
+    userId: string,
+    items: { id: string; section: ReportSection; sortOrder: number }[],
+) {
+    if (items.length === 0) return { ok: true };
+
+    const ids = items.map((i) => i.id);
+    const owned = await prisma.reportBlock.findMany({
+        where: { id: { in: ids }, report: { userId } },
+        select: { id: true },
+    });
+    const ownedIds = new Set(owned.map((b) => b.id));
+
+    await prisma.$transaction(
+        items
+            .filter((i) => ownedIds.has(i.id))
+            .map((i) =>
+                prisma.reportBlock.update({
+                    where: { id: i.id },
+                    data: { section: i.section, sortOrder: i.sortOrder },
+                }),
+            ),
+    );
+
+    return { ok: true };
+}

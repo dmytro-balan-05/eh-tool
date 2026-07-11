@@ -1,18 +1,27 @@
 "use client";
 import { useState } from "react";
-import { useReport, type ReportSection } from "../hooks/useReport";
+import {
+    DndContext,
+    DragOverlay,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    closestCorners,
+    type DragStartEvent,
+    type DragEndEvent,
+} from "@dnd-kit/core";
+import { arrayMove } from "@dnd-kit/sortable";
+import { useReport, type ReportSection, type ReportBlock } from "../hooks/useReport";
 import { ReportSectionColumn } from "./ReportSection";
 
 function todayStr() {
     return new Date().toISOString().slice(0, 10);
 }
-
 function shiftDate(date: string, days: number) {
     const d = new Date(`${date}T00:00:00`);
     d.setDate(d.getDate() + days);
     return d.toISOString().slice(0, 10);
 }
-
 function prettyDate(date: string) {
     return new Date(`${date}T00:00:00`).toLocaleDateString(undefined, {
         weekday: "short",
@@ -21,12 +30,71 @@ function prettyDate(date: string) {
     });
 }
 
+const SECTIONS: { key: ReportSection; title: string }[] = [
+    { key: "DONE", title: "Done yesterday" },
+    { key: "PLAN", title: "Plan today" },
+    { key: "BLOCKERS", title: "Blockers / issues" },
+];
+
 export function ReportBoard() {
     const [date, setDate] = useState(todayStr());
-    const { report, loading, assembling, assemble, addBlock, updateBlock, deleteBlock } = useReport(date);
+    const { report, loading, assembling, assemble, addBlock, updateBlock, deleteBlock, reorder } = useReport(date);
+    const [activeId, setActiveId] = useState<string | null>(null);
 
+    const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
+
+    const blocks = report?.blocks ?? [];
     const bySection = (s: ReportSection) =>
-        (report?.blocks ?? []).filter((b) => b.section === s).sort((a, b) => a.sortOrder - b.sortOrder);
+        blocks.filter((b) => b.section === s).sort((a, b) => a.sortOrder - b.sortOrder);
+
+    const activeBlock = blocks.find((b) => b.id === activeId) || null;
+
+    function sectionOf(id: string): ReportSection | null {
+        if (id.startsWith("section:")) return id.slice("section:".length) as ReportSection;
+        return blocks.find((b) => b.id === id)?.section ?? null;
+    }
+
+    function onDragStart(e: DragStartEvent) {
+        setActiveId(String(e.active.id));
+    }
+
+    function onDragEnd(e: DragEndEvent) {
+        setActiveId(null);
+        const { active, over } = e;
+        if (!over) return;
+
+        const activeIdStr = String(active.id);
+        const overIdStr = String(over.id);
+        const fromSection = sectionOf(activeIdStr);
+        const toSection = sectionOf(overIdStr);
+        if (!fromSection || !toSection) return;
+
+        const activeBlocks = bySection(fromSection);
+        const targetBlocks = fromSection === toSection ? activeBlocks : bySection(toSection);
+
+        const oldIndex = activeBlocks.findIndex((b) => b.id === activeIdStr);
+        let newIndex = targetBlocks.findIndex((b) => b.id === overIdStr);
+        if (newIndex === -1) newIndex = targetBlocks.length;
+
+        let reordered: ReportBlock[];
+
+        if (fromSection === toSection) {
+            const moved = arrayMove(activeBlocks, oldIndex, newIndex);
+            reordered = moved.map((b, i) => ({ ...b, sortOrder: i }));
+        } else {
+            const moving = { ...activeBlocks[oldIndex], section: toSection };
+            const newTarget = [...targetBlocks];
+            newTarget.splice(newIndex, 0, moving);
+            const newFrom = activeBlocks.filter((b) => b.id !== activeIdStr).map((b, i) => ({ ...b, sortOrder: i }));
+            const newTo = newTarget.map((b, i) => ({ ...b, sortOrder: i, section: toSection }));
+            const untouched = blocks.filter((b) => b.section !== fromSection && b.section !== toSection);
+            reorder([...untouched, ...newFrom, ...newTo]);
+            return;
+        }
+
+        const untouched = blocks.filter((b) => b.section !== fromSection);
+        reorder([...untouched, ...reordered]);
+    }
 
     return (
         <main className="mx-auto max-w-6xl space-y-5 px-6 py-6">
@@ -60,38 +128,40 @@ export function ReportBoard() {
             </div>
 
             <p className="text-xs text-gray-400 dark:text-gray-500">
-                &ldquo;Assemble draft&rdquo; pulls yesterday&rsquo;s offers, requests and your routines. Manual blocks are kept.
+                &ldquo;Assemble draft&rdquo; pulls yesterday&rsquo;s offers, requests and your routines. Manual blocks are kept. Drag ⠿ to reorder or move between sections.
             </p>
 
             {loading ? (
                 <p className="text-sm text-gray-400">Loading…</p>
             ) : (
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                    <ReportSectionColumn
-                        title="Done yesterday"
-                        section="DONE"
-                        blocks={bySection("DONE")}
-                        onAdd={addBlock}
-                        onUpdate={updateBlock}
-                        onDelete={deleteBlock}
-                    />
-                    <ReportSectionColumn
-                        title="Plan today"
-                        section="PLAN"
-                        blocks={bySection("PLAN")}
-                        onAdd={addBlock}
-                        onUpdate={updateBlock}
-                        onDelete={deleteBlock}
-                    />
-                    <ReportSectionColumn
-                        title="Blockers / issues"
-                        section="BLOCKERS"
-                        blocks={bySection("BLOCKERS")}
-                        onAdd={addBlock}
-                        onUpdate={updateBlock}
-                        onDelete={deleteBlock}
-                    />
-                </div>
+                <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCorners}
+                    onDragStart={onDragStart}
+                    onDragEnd={onDragEnd}
+                >
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                        {SECTIONS.map((s) => (
+                            <ReportSectionColumn
+                                key={s.key}
+                                title={s.title}
+                                section={s.key}
+                                blocks={bySection(s.key)}
+                                onAdd={addBlock}
+                                onUpdate={updateBlock}
+                                onDelete={deleteBlock}
+                            />
+                        ))}
+                    </div>
+
+                    <DragOverlay>
+                        {activeBlock ? (
+                            <div className="rounded-lg border border-gray-200 bg-white p-2.5 text-sm shadow-lg dark:border-gray-700 dark:bg-gray-900">
+                                {activeBlock.text}
+                            </div>
+                        ) : null}
+                    </DragOverlay>
+                </DndContext>
             )}
         </main>
     );

@@ -82,6 +82,17 @@ export function useReport(date: string) {
         },
         [],
     );
-
-    return { report, loading, assembling, assemble, addBlock, updateBlock, deleteBlock, reload: load };
-}
+    const reorder = useCallback(
+        async (blocks: ReportBlock[]) => {
+            setReport((prev) => (prev ? { ...prev, blocks } : prev));
+            await fetch("/api/reports/blocks", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    items: blocks.map((b) => ({ id: b.id, section: b.section, sortOrder: b.sortOrder })),
+                }),
+            });
+        },
+        [],
+    );
+    return { report, loading, assembling, assemble, addBlock, updateBlock, deleteBlock, reorder, reload: load };}
