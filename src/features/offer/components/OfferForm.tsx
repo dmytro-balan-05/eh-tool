@@ -2,10 +2,8 @@
 import { useMemo, useRef, useState } from "react";
 import { parseCarriers } from "../lib/parseCarriers";
 import { parseAsrOrder } from "../lib/parseAsrOrder";
-import { useTheme } from "../hooks/useTheme";
 import { useVinDecoder } from "../hooks/useVinDecoder";
 import { useWarehouses } from "../hooks/useWarehouses";
-import { Header } from "./Header";
 import { ModeToggle } from "./ModeToggle";
 import { VehicleSection } from "./VehicleSection";
 import { DetailsSection } from "./DetailsSection";
@@ -14,7 +12,6 @@ import { OutputBlock } from "./OutputBlock";
 import type { OfferMode } from "../types";
 
 export function OfferForm() {
-    const { theme, toggle } = useTheme();
     const vind = useVinDecoder();
     const { warehouses, add, remove } = useWarehouses();
 
@@ -115,20 +112,26 @@ export function OfferForm() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-100 text-gray-900 dark:bg-gray-950 dark:text-gray-100">
-            <Header theme={theme} onToggleTheme={toggle} onReset={resetAll} />
-
+        <div className="bg-gray-100 text-gray-900 dark:bg-gray-950 dark:text-gray-100">
             <main className="mx-auto max-w-5xl px-4 py-6">
                 <div className="flex gap-4">
                     <div className="flex-1 space-y-5">
                         <div className="flex items-center justify-between">
                             <ModeToggle mode={mode} onChange={setMode} />
-                            <button
-                                onClick={() => setShowAsr((s) => !s)}
-                                className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-teal-600 hover:bg-gray-50 dark:border-gray-700 dark:text-teal-400 dark:hover:bg-gray-800"
-                            >
-                                {showAsr ? "Close ACP" : "Paste from ACP"}
-                            </button>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => setShowAsr((s) => !s)}
+                                    className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-teal-600 hover:bg-gray-50 dark:border-gray-700 dark:text-teal-400 dark:hover:bg-gray-800"
+                                >
+                                    {showAsr ? "Close ACP" : "Paste from ACP"}
+                                </button>
+                                <button
+                                    onClick={resetAll}
+                                    className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                                >
+                                    New Offer
+                                </button>
+                            </div>
                         </div>
 
                         <VehicleSection

@@ -32,7 +32,7 @@ function PasteBox({
             <textarea
                 value={text}
                 onChange={(e) => setText(e.target.value)}
-                className="h-24 w-full resize-y rounded-lg border border-gray-300 bg-white px-3 py-2 font-mono text-xs text-gray-900 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                className="h-40 w-full resize-y rounded-lg border border-gray-300 bg-white px-3 py-2 font-mono text-xs text-gray-900 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                 placeholder="Paste requests — VIN + text, one per line…"
             />
             <button
@@ -92,9 +92,9 @@ export function RequestsBoard() {
     );
 
     return (
-        <main className="mx-auto max-w-3xl space-y-4 px-4 py-6">
+        <main className="mx-auto max-w-6xl space-y-5 px-6 py-6">
             <div className="flex items-center justify-between">
-            <span/>
+                <h1 className="text-lg font-semibold">Requests</h1>
                 <div className="text-xs text-gray-500 dark:text-gray-400">
                     {counts.open} open · {counts.followup} follow-up
                 </div>
