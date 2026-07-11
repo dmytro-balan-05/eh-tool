@@ -18,12 +18,20 @@ function PasteBox({
     const [text, setText] = useState("");
     const [busy, setBusy] = useState(false);
 
-    async function submit() {
-        if (!text.trim()) return;
+    async function submit(value?: string) {
+        const payload = (value ?? text).trim();
+        if (!payload || busy) return;
         setBusy(true);
-        await onAdd(source, text);
+        await onAdd(source, payload);
         setText("");
         setBusy(false);
+    }
+
+    function onPaste(e: React.ClipboardEvent<HTMLTextAreaElement>) {
+        const pasted = e.clipboardData.getData("text");
+        if (!pasted.trim()) return;
+        e.preventDefault();
+        submit(pasted);
     }
 
     return (
@@ -32,11 +40,12 @@ function PasteBox({
             <textarea
                 value={text}
                 onChange={(e) => setText(e.target.value)}
+                onPaste={onPaste}
                 className="h-40 w-full resize-y rounded-lg border border-gray-300 bg-white px-3 py-2 font-mono text-xs text-gray-900 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-                placeholder="Paste requests — VIN + text, one per line…"
+                placeholder="Paste requests here — cards are created automatically…"
             />
             <button
-                onClick={submit}
+                onClick={() => submit()}
                 disabled={busy}
                 className="mt-2 rounded-lg bg-teal-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50"
             >
