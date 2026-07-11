@@ -20,16 +20,18 @@ model User {
   createdAt          DateTime  @default(now())
 }
 model Request {
-  id        String        @id @default(cuid())
-  userId    String
-  user      User          @relation(fields: [userId], references: [id])
-  vin       String?
-  text      String
-  source    RequestSource
-  status    RequestStatus @default(NEW)
-  tags      String[]
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  id         String          @id @default(cuid())
+  userId     String
+  user       User            @relation(fields: [userId], references: [id])
+  vin        String?
+  text       String
+  source     RequestSource
+  status     RequestStatus   @default(NEW)
+  tags       String[]
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  actions    RequestAction[]
+  resolvedAt DateTime?
 }
 
 enum RequestSource {
@@ -79,4 +81,19 @@ model Warehouse {
   city      String?
   address   String
   createdAt DateTime @default(now())
+}
+model RequestAction {
+  id        String            @id @default(cuid())
+  requestId String
+  request   Request           @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  userId    String
+  source    RequestSource
+  type      RequestActionType
+  createdAt DateTime          @default(now())
+}
+
+enum RequestActionType {
+  CALLED_NO_ANSWER
+  TEXTED
+  RESOLVED
 }
