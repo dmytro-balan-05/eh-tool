@@ -9,14 +9,38 @@ datasource db {
 }
 
 model User {
-  id                 String   @id @default(cuid())
-  email              String   @unique
+  id                 String    @id @default(cuid())
+  email              String    @unique
   name               String?
   passwordHash       String?
-  role               Role     @default(USER)
-  mustChangePassword Boolean  @default(true)
+  role               Role      @default(USER)
+  mustChangePassword Boolean   @default(true)
   offers             Offer[]
-  createdAt          DateTime @default(now())
+  requests           Request[]
+  createdAt          DateTime  @default(now())
+}
+model Request {
+  id        String        @id @default(cuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id])
+  vin       String?
+  text      String
+  source    RequestSource
+  status    RequestStatus @default(NEW)
+  tags      String[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+enum RequestSource {
+  INTERNATIONAL
+  CUSTOMER_SERVICE
+}
+
+enum RequestStatus {
+  NEW
+  CALLED_NO_ANSWER
+  RESOLVED
 }
 
 enum Role {

@@ -11,17 +11,16 @@ export function Header({ theme, onToggleTheme, onReset }: Props) {
     return (
         <header className="border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
             <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
-                <h1 className="text-lg font-semibold">Vehicle Offer</h1>
+                <h1 className="text-lg font-semibold">EH TOOL</h1>
                 <div className="flex items-center gap-2">
-                    <a href="/offers"
-                       className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-                    >
+                    <a href="/offers" className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
                         My Offers
                     </a>
-                    <a
-                    href="/how-to"
-                    className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800" >
-                    How to use
+                    <a href="/requests" className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
+                        Requests
+                    </a>
+                    <a href="/how-to" className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800" >
+                        How to use
                     </a>
                 <AuthMenu />
                     <button
