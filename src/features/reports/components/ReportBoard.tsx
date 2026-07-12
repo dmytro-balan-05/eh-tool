@@ -132,12 +132,6 @@ export function ReportBoard() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                    <Link
-                        href="/routines"
-                        className="rounded-lg px-3 py-1.5 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
-                    >
-                        Routines
-                    </Link>
                     <button
                         onClick={copyReport}
                         className="rounded-lg border border-gray-300 px-4 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"

@@ -23,8 +23,7 @@ export async function POST(req: NextRequest) {
     if (!uid) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const body = await req.json().catch(() => null);
     if (!body?.text) return NextResponse.json({ error: "text required" }, { status: 400 });
-    return NextResponse.json(await addRoutine(uid, { text: body.text, sections: body.section }));
-}
+    return NextResponse.json(await addRoutine(uid, { text: body.text, sections: body.sections }));}
 
 export async function PATCH(req: NextRequest) {
     const uid = await userId();
