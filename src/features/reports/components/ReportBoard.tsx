@@ -13,6 +13,9 @@ import {
 import { arrayMove } from "@dnd-kit/sortable";
 import { useReport, type ReportSection, type ReportBlock } from "../hooks/useReport";
 import { ReportSectionColumn } from "./ReportSection";
+import { formatReport } from "../lib/formatReport";
+
+
 
 function todayStr() {
     return new Date().toISOString().slice(0, 10);
@@ -40,6 +43,16 @@ export function ReportBoard() {
     const [date, setDate] = useState(todayStr());
     const { report, loading, assembling, assemble, addBlock, updateBlock, deleteBlock, reorder } = useReport(date);
     const [activeId, setActiveId] = useState<string | null>(null);
+
+    const [copied, setCopied] = useState(false);
+
+    async function copyReport() {
+        try {
+            await navigator.clipboard.writeText(formatReport(blocks));
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1500);
+        } catch {}
+    }
 
     const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
@@ -118,13 +131,21 @@ export function ReportBoard() {
                     </button>
                 </div>
 
-                <button
-                    onClick={assemble}
-                    disabled={assembling}
-                    className="rounded-lg bg-teal-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50"
-                >
-                    {assembling ? "Assembling…" : "Assemble draft"}
-                </button>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={copyReport}
+                        className="rounded-lg border border-gray-300 px-4 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+                    >
+                        {copied ? "Copied ✓" : "Copy to Slack"}
+                    </button>
+                    <button
+                        onClick={assemble}
+                        disabled={assembling}
+                        className="rounded-lg bg-teal-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50"
+                    >
+                        {assembling ? "Assembling…" : "Assemble draft"}
+                    </button>
+                </div>
             </div>
 
             <p className="text-xs text-gray-400 dark:text-gray-500">
