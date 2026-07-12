@@ -123,7 +123,9 @@ export async function assembleDraft(userId: string, date: string) {
     }
 
     routines.forEach((r, i) => {
-        auto.push({ section: r.section as ReportSection, kind: "ROUTINE", text: r.text, sortOrder: 100 + i });
+        for (const section of r.sections) {
+            auto.push({ section: section as ReportSection, kind: "ROUTINE", text: r.text, sortOrder: 100 + i });
+        }
     });
 
     if (auto.length > 0) {

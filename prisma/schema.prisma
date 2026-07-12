@@ -124,14 +124,14 @@ model ReportBlock {
 }
 
 model Routine {
-  id        String        @id @default(cuid())
+  id        String          @id @default(cuid())
   userId    String
-  user      User          @relation(fields: [userId], references: [id])
+  user      User            @relation(fields: [userId], references: [id])
   text      String
-  section   ReportSection @default(PLAN)
-  active    Boolean       @default(true)
-  sortOrder Int           @default(0)
-  createdAt DateTime      @default(now())
+  sections  ReportSection[]
+  active    Boolean         @default(true)
+  sortOrder Int             @default(0)
+  createdAt DateTime        @default(now())
 }
 
 enum ReportSection {
