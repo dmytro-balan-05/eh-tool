@@ -30,7 +30,7 @@ export function OfferForm() {
     const savedVins = useRef<Set<string>>(new Set());
 
     const carriers = useMemo(() => parseCarriers(raw), [raw]);
-    const phones = carriers.map((c) => c.phone).filter(Boolean).join(" ");
+    const phones = carriers.map((c) => c.phone).filter(Boolean).join("\n ");
     const selectedWarehouse = warehouses.find((w) => w.id === warehouseId);
 
     const destination =
