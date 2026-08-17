@@ -30,6 +30,7 @@ export function OfferForm() {
     const savedVins = useRef<Set<string>>(new Set());
 
     const carriers = useMemo(() => parseCarriers(raw), [raw]);
+    const phones = carriers.map((c) => c.phone).filter(Boolean).join(" ");
     const selectedWarehouse = warehouses.find((w) => w.id === warehouseId);
 
     const destination =
@@ -160,8 +161,14 @@ export function OfferForm() {
                             onDeleteWarehouse={deleteWarehouse}
                         />
 
-                        <CarriersSection raw={raw} setRaw={setRaw} detected={carriers.length} />
-
+                        <CarriersSection
+                            raw={raw}
+                            setRaw={setRaw}
+                            detected={carriers.length}
+                            phones={phones}
+                            onCopyPhones={() => copy("phones", phones)}
+                            copiedPhones={copied === "phones"}
+                        />
                         <div className="space-y-4">
                             {note && (
                                 <OutputBlock label="ACP Note" text={note} keyName="note" copied={copied} onCopy={copy} />
