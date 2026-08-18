@@ -1,5 +1,6 @@
 import { prisma } from "@/server/db";
 import { getRequestStats } from "@/features/requests/request.service";
+import { countLateDeliveries, mondayOf } from "@/features/late/late.service";
 
 export type ReportSection = "DONE" | "PLAN" | "BLOCKERS";
 
@@ -96,6 +97,7 @@ export async function assembleDraft(userId: string, date: string) {
     });
 
     const stats = await getRequestStats(userId, yFrom, yTo);
+    const lateCount = await countLateDeliveries(userId, mondayOf(new Date(`${date}T00:00:00`)));
 
     const routines = await prisma.routine.findMany({
         where: { userId, active: true },
@@ -121,7 +123,14 @@ export async function assembleDraft(userId: string, date: string) {
     if (reqLine.length > 0) {
         auto.push({ section: "DONE", kind: "AUTO", text: `Requests — ${reqLine.join(", ")}`, sortOrder: 1 });
     }
-
+    if (lateCount > 0) {
+        auto.push({
+            section: "DONE",
+            kind: "AUTO",
+            text: `Late deliveries this week: ${lateCount}`,
+            sortOrder: 2,
+        });
+    }
     routines.forEach((r, i) => {
         for (const section of r.sections) {
             auto.push({ section: section as ReportSection, kind: "ROUTINE", text: r.text, sortOrder: 100 + i });

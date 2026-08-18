@@ -45,6 +45,22 @@ export function ReportBoard() {
     const [activeId, setActiveId] = useState<string | null>(null);
 
     const [copied, setCopied] = useState(false);
+    const [weeklyCopied, setWeeklyCopied] = useState(false);
+    const [weeklyBusy, setWeeklyBusy] = useState(false);
+
+    async function copyWeekly() {
+        setWeeklyBusy(true);
+        try {
+            const res = await fetch(`/api/reports/weekly?date=${date}`);
+            if (res.ok) {
+                const data = await res.json();
+                await navigator.clipboard.writeText(data.text);
+                setWeeklyCopied(true);
+                setTimeout(() => setWeeklyCopied(false), 2000);
+            }
+        } catch {}
+        setWeeklyBusy(false);
+    }
 
     async function copyReport() {
         try {
@@ -132,6 +148,13 @@ export function ReportBoard() {
                 </div>
 
                 <div className="flex items-center gap-2">
+                    <button
+                        onClick={copyWeekly}
+                        disabled={weeklyBusy}
+                        className="rounded-lg border border-gray-300 px-4 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+                    >
+                        {weeklyBusy ? "…" : weeklyCopied ? "Copied ✓" : "Weekly report"}
+                    </button>
                     <button
                         onClick={copyReport}
                         className="rounded-lg border border-gray-300 px-4 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
