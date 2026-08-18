@@ -7,6 +7,7 @@ import { useTheme } from "@/features/offer/hooks/useTheme";
 const TABS = [
     { href: "/", label: "Offer" },
     { href: "/requests", label: "Requests" },
+    { href: "/late", label: "Late" },
     { href: "/report", label: "Report" },
     { href: "/routines", label: "Routines" },
     { href: "/offers", label: "My Offers" },

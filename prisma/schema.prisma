@@ -9,17 +9,18 @@ datasource db {
 }
 
 model User {
-  id                 String    @id @default(cuid())
-  email              String    @unique
+  id                 String         @id @default(cuid())
+  email              String         @unique
   name               String?
   passwordHash       String?
-  role               Role      @default(USER)
-  mustChangePassword Boolean   @default(true)
+  role               Role           @default(USER)
+  mustChangePassword Boolean        @default(true)
   offers             Offer[]
   requests           Request[]
-  createdAt          DateTime  @default(now())
+  createdAt          DateTime       @default(now())
   reports            Report[]
   routines           Routine[]
+  lateDeliveries     LateDelivery[]
 }
 model Request {
   id         String          @id @default(cuid())
@@ -138,6 +139,17 @@ enum ReportSection {
   DONE
   PLAN
   BLOCKERS
+}
+
+model LateDelivery {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  vin       String
+  weekStart String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, vin, weekStart])
 }
 
 enum BlockKind {
