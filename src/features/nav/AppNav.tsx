@@ -4,15 +4,20 @@ import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { useTheme } from "@/features/offer/hooks/useTheme";
 
-const TABS = [
-    { href: "/", label: "Offer" },
-    { href: "/requests", label: "Requests" },
-    { href: "/late", label: "Late" },
-    { href: "/report", label: "Report" },
-    { href: "/routines", label: "Routines" },
-    { href: "/offers", label: "My Offers" },
-    { href: "/how-to", label: "How to use" },
-
+const TAB_GROUPS = [
+    [
+        { href: "/", label: "Offer" },
+        { href: "/requests", label: "Requests" },
+        { href: "/late", label: "Late" },
+    ],
+    [
+        { href: "/report", label: "Report" },
+        { href: "/routines", label: "Routines" },
+    ],
+    [
+        { href: "/offers", label: "My Offers" },
+        { href: "/how-to", label: "How to use" },
+    ],
 ];
 
 export function AppNav() {
@@ -32,18 +37,23 @@ export function AppNav() {
                 </Link>
 
                 <nav className="flex items-center gap-1">
-                    {TABS.map((t) => (
-                        <Link
-                            key={t.href}
-                            href={t.href}
-                            className={`rounded-lg px-3 py-1.5 text-sm transition ${
-                                isActive(t.href)
-                                    ? "bg-gray-100 font-medium text-gray-900 dark:bg-gray-800 dark:text-gray-100"
-                                    : "text-gray-500 hover:bg-gray-50 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
-                            }`}
-                        >
-                            {t.label}
-                        </Link>
+                    {TAB_GROUPS.map((group, gi) => (
+                        <div key={gi} className="flex items-center gap-1">
+                            {gi > 0 && <span className="mx-1.5 h-4 w-px bg-gray-200 dark:bg-gray-700" />}
+                            {group.map((t) => (
+                                <Link
+                                    key={t.href}
+                                    href={t.href}
+                                    className={`rounded-lg px-3 py-1.5 text-sm transition ${
+                                        isActive(t.href)
+                                            ? "bg-gray-100 font-medium text-gray-900 dark:bg-gray-800 dark:text-gray-100"
+                                            : "text-gray-500 hover:bg-gray-50 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+                                    }`}
+                                >
+                                    {t.label}
+                                </Link>
+                            ))}
+                        </div>
                     ))}
                 </nav>
 
