@@ -1,6 +1,8 @@
 import { prisma } from "@/server/db";
 import { getRequestStats } from "@/features/requests/request.service";
 import { countLateDeliveries, mondayOf } from "@/features/late/late.service";
+import { countLatePickups } from "@/features/late/pickup.service";
+import { getReportSettings } from "./settings.service";
 
 export type ReportSection = "DONE" | "PLAN" | "BLOCKERS";
 
@@ -88,6 +90,7 @@ export async function assembleDraft(userId: string, date: string) {
         where: { reportId: report.id, kind: { in: ["AUTO", "ROUTINE"] } },
     });
 
+    const settings = await getReportSettings(userId);
     const yesterday = prevDate(date);
     const { from: yFrom, to: yTo } = dayBounds(yesterday);
 
@@ -98,6 +101,7 @@ export async function assembleDraft(userId: string, date: string) {
 
     const stats = await getRequestStats(userId, yFrom, yTo);
     const lateCount = await countLateDeliveries(userId, mondayOf(new Date(`${date}T00:00:00`)));
+    const pickupCount = await countLatePickups(userId, mondayOf(new Date(`${date}T00:00:00`)));
 
     const routines = await prisma.routine.findMany({
         where: { userId, active: true },
@@ -106,7 +110,7 @@ export async function assembleDraft(userId: string, date: string) {
 
     const auto: { section: ReportSection; kind: "AUTO" | "ROUTINE"; text: string; sortOrder: number }[] = [];
 
-    if (offers.length > 0) {
+    if (settings.reportOffers && offers.length > 0) {
         auto.push({
             section: "DONE",
             kind: "AUTO",
@@ -120,15 +124,23 @@ export async function assembleDraft(userId: string, date: string) {
         reqLine.push(`Int: ${stats.international.handled} (Solved ${stats.international.solved})`);
     if (stats.customerService.handled > 0)
         reqLine.push(`CS: ${stats.customerService.handled} (Solved ${stats.customerService.solved})`);
-    if (reqLine.length > 0) {
+    if (settings.reportRequests && reqLine.length > 0) {
         auto.push({ section: "DONE", kind: "AUTO", text: `Requests — ${reqLine.join(", ")}`, sortOrder: 1 });
     }
-    if (lateCount > 0) {
+    if (settings.reportLateDel && lateCount > 0) {
         auto.push({
             section: "DONE",
             kind: "AUTO",
             text: `Late deliveries this week: ${lateCount}`,
             sortOrder: 2,
+        });
+    }
+    if (settings.reportLatePickups && pickupCount > 0) {
+        auto.push({
+            section: "DONE",
+            kind: "AUTO",
+            text: `Late pickups this week: ${pickupCount}`,
+            sortOrder: 3,
         });
     }
     routines.forEach((r, i) => {

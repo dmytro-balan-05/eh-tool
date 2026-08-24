@@ -1,9 +1,11 @@
 "use client";
 import { useState } from "react";
-import { signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 export function ChangePasswordForm() {
-    const [currentPassword, setCurrentPassword] = useState("");
+    const router = useRouter();
+    const { update } = useSession();
     const [newPassword, setNewPassword] = useState("");
     const [confirm, setConfirm] = useState("");
     const [error, setError] = useState("");
@@ -22,17 +24,19 @@ export function ChangePasswordForm() {
         const res = await fetch("/api/auth/change-password", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ currentPassword, newPassword }),
+            body: JSON.stringify({ currentPassword: "", newPassword }),
         });
         const data = await res.json();
-        setLoading(false);
 
         if (!res.ok) {
+            setLoading(false);
             setError(data.error || "Failed");
             return;
         }
 
-        await signOut({ callbackUrl: "/login" });
+        await update({ mustChangePassword: false });
+        router.push("/how-to");
+        router.refresh();
     }
 
     const input =
@@ -42,22 +46,31 @@ export function ChangePasswordForm() {
     return (
         <div className="flex min-h-screen items-center justify-center bg-gray-100 px-4 dark:bg-gray-950">
             <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-                <h1 className="mb-1 text-lg font-semibold text-gray-900 dark:text-gray-100">Change password</h1>
+                <h1 className="mb-1 text-lg font-semibold text-gray-900 dark:text-gray-100">Set your password</h1>
                 <p className="mb-5 text-xs text-gray-500 dark:text-gray-400">
-                    You must set a new password before continuing.
+                    Choose a password before you start. At least 8 characters.
                 </p>
                 <form onSubmit={submit} className="space-y-3">
                     <div>
-                        <label className={label}>Current (temporary) password</label>
-                        <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className={input} required />
-                    </div>
-                    <div>
                         <label className={label}>New password</label>
-                        <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className={input} required />
+                        <input
+                            type="password"
+                            autoFocus
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            className={input}
+                            required
+                        />
                     </div>
                     <div>
                         <label className={label}>Confirm new password</label>
-                        <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className={input} required />
+                        <input
+                            type="password"
+                            value={confirm}
+                            onChange={(e) => setConfirm(e.target.value)}
+                            className={input}
+                            required
+                        />
                     </div>
                     {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
                     <button
@@ -65,7 +78,7 @@ export function ChangePasswordForm() {
                         disabled={loading}
                         className="w-full rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50"
                     >
-                        {loading ? "…" : "Set new password"}
+                        {loading ? "…" : "Continue"}
                     </button>
                 </form>
             </div>

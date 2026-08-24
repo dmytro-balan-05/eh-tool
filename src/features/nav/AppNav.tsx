@@ -3,22 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { useTheme } from "@/features/offer/hooks/useTheme";
-
-const TAB_GROUPS = [
-    [
-        { href: "/", label: "Offer" },
-        { href: "/requests", label: "Requests" },
-        { href: "/late", label: "Late" },
-    ],
-    [
-        { href: "/report", label: "Report" },
-        { href: "/routines", label: "Routines" },
-    ],
-    [
-        { href: "/offers", label: "My Offers" },
-        { href: "/how-to", label: "How to use" },
-    ],
-];
+import { SideMenu } from "./SideMenu";
 
 export function AppNav() {
     const pathname = usePathname();
@@ -26,43 +11,35 @@ export function AppNav() {
     const { data: session } = useSession();
     const role = (session?.user as { role?: string } | undefined)?.role;
 
-    const isActive = (href: string) =>
-        href === "/" ? pathname === "/" : pathname.startsWith(href);
+    const isActive = (href: string) => pathname.startsWith(href);
 
     return (
-        <header className="border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
-            <div className="mx-auto flex h-14 max-w-6xl items-center gap-6 px-6">
+        <header className="relative border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+            <div className="flex h-14 items-center gap-3 px-3">
+                <SideMenu />
+
                 <Link href="/" className="shrink-0 font-bold tracking-tight">
                     EH <span className="text-teal-600 dark:text-teal-400">Tool</span>
                 </Link>
 
-                <nav className="flex items-center gap-1">
-                    {TAB_GROUPS.map((group, gi) => (
-                        <div key={gi} className="flex items-center gap-1">
-                            {gi > 0 && <span className="mx-1.5 h-4 w-px bg-gray-200 dark:bg-gray-700" />}
-                            {group.map((t) => (
-                                <Link
-                                    key={t.href}
-                                    href={t.href}
-                                    className={`rounded-lg px-3 py-1.5 text-sm transition ${
-                                        isActive(t.href)
-                                            ? "bg-gray-100 font-medium text-gray-900 dark:bg-gray-800 dark:text-gray-100"
-                                            : "text-gray-500 hover:bg-gray-50 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
-                                    }`}
-                                >
-                                    {t.label}
-                                </Link>
-                            ))}
-                        </div>
-                    ))}
-                </nav>
-
                 <div className="ml-auto flex items-center gap-2">
+                    <Link
+                        href="/how-to"
+                        className={`rounded-lg px-3 py-1.5 text-sm transition ${
+                            isActive("/how-to")
+                                ? "bg-gray-100 font-medium text-gray-900 dark:bg-gray-800 dark:text-gray-100"
+                                : "border border-teal-300 font-medium text-teal-700 hover:bg-teal-50 dark:border-teal-800 dark:text-teal-400 dark:hover:bg-teal-950/40"
+                        }`}
+                    >
+                        How to use
+                    </Link>
+
                     {session?.user && (
                         <span className="hidden text-xs text-gray-500 md:inline dark:text-gray-400">
-              {session.user.email}
-            </span>
+                            {session.user.email}
+                        </span>
                     )}
+
                     {role === "ADMIN" && (
                         <Link
                             href="/admin/users"
@@ -75,6 +52,7 @@ export function AppNav() {
                             Users
                         </Link>
                     )}
+
                     <button
                         onClick={toggle}
                         className="rounded-lg border border-gray-300 px-2.5 py-1.5 text-sm hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
@@ -82,6 +60,7 @@ export function AppNav() {
                     >
                         {theme === "dark" ? "☀️" : "🌙"}
                     </button>
+
                     {session?.user && (
                         <button
                             onClick={() => signOut({ callbackUrl: "/login" })}

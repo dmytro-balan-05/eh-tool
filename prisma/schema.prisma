@@ -21,6 +21,11 @@ model User {
   reports            Report[]
   routines           Routine[]
   lateDeliveries     LateDelivery[]
+  latePickups        LatePickup[]
+  reportOffers       Boolean        @default(true)
+  reportRequests     Boolean        @default(true)
+  reportLateDel      Boolean        @default(true)
+  reportLatePickups  Boolean        @default(true)
 }
 model Request {
   id         String          @id @default(cuid())
@@ -67,6 +72,7 @@ model Offer {
   deliveryPlace String?
   recipients    OfferRecipient[]
   createdAt     DateTime         @default(now())
+  mode          OfferScope       @default(DOMESTIC)
 }
 
 model OfferRecipient {
@@ -142,12 +148,13 @@ enum ReportSection {
 }
 
 model LateDelivery {
-  id        String   @id @default(cuid())
+  id        String     @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User       @relation(fields: [userId], references: [id])
   vin       String
   weekStart String
-  createdAt DateTime @default(now())
+  createdAt DateTime   @default(now())
+  mode      OfferScope @default(INTERNATIONAL)
 
   @@unique([userId, vin, weekStart])
 }
@@ -156,4 +163,20 @@ enum BlockKind {
   MANUAL
   AUTO
   ROUTINE
+}
+model LatePickup {
+  id           String     @id @default(cuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id])
+  vin          String
+  weekStart    String
+  assignedDate String
+  createdAt    DateTime   @default(now())
+  mode         OfferScope @default(DOMESTIC)
+
+  @@unique([userId, vin, weekStart])
+}
+enum OfferScope {
+  DOMESTIC
+  INTERNATIONAL
 }

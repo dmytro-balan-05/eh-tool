@@ -1,7 +1,10 @@
 import { prisma } from "@/server/db";
 
-const EXCLUDED_CARRIERS = ["adp towing", "copart delivery", "marine transport logistics"];
-
+export const EXCLUDED_CARRIERS = [
+    "adp towing",
+    "copart delivery",
+    "dispatcher",
+];
 export function mondayOf(date: Date): string {
     const d = new Date(date);
     const day = d.getDay();

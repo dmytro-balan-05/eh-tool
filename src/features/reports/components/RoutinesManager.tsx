@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { ReportSettings } from "./ReportSettings";
 
 type Section = "DONE" | "PLAN" | "BLOCKERS";
 type Routine = { id: string; text: string; sections: Section[]; active: boolean };
@@ -69,6 +70,7 @@ export function RoutinesManager() {
         <main className="mx-auto max-w-2xl space-y-5 px-6 py-6">
             <div>
                 <h1 className="text-lg font-semibold">Routines</h1>
+                <ReportSettings />
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                     Recurring items that &ldquo;Assemble draft&rdquo; adds to your report automatically each day.
                 </p>

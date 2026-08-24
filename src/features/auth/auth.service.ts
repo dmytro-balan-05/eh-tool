@@ -15,20 +15,26 @@ export async function changePassword(
     if (!newPassword || newPassword.length < 8) {
         throw new AuthError("New password must be at least 8 characters", 400);
     }
-    if (newPassword === currentPassword) {
-        throw new AuthError("New password must differ from the current one", 400);
-    }
 
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user || !user.passwordHash) {
         throw new AuthError("User not found", 404);
     }
 
-    const ok = await bcrypt.compare(currentPassword, user.passwordHash);
-    if (!ok) {
-        throw new AuthError("Current password is incorrect", 400);
+    if (!user.mustChangePassword) {
+        if (newPassword === currentPassword) {
+            throw new AuthError("New password must differ from the current one", 400);
+        }
+        const ok = await bcrypt.compare(currentPassword, user.passwordHash);
+        if (!ok) {
+            throw new AuthError("Current password is incorrect", 400);
+        }
+    } else {
+        const same = await bcrypt.compare(newPassword, user.passwordHash);
+        if (same) {
+            throw new AuthError("New password must differ from the temporary one", 400);
+        }
     }
-
     const passwordHash = await bcrypt.hash(newPassword, 12);
     await prisma.user.update({
         where: { id: userId },

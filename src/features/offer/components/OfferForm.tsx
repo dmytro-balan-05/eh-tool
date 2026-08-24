@@ -1,5 +1,6 @@
 "use client";
 import { useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { parseCarriers } from "../lib/parseCarriers";
 import { parseAsrOrder } from "../lib/parseAsrOrder";
 import { useVinDecoder } from "../hooks/useVinDecoder";
@@ -15,7 +16,10 @@ export function OfferForm() {
     const vind = useVinDecoder();
     const { warehouses, add, remove } = useWarehouses();
 
-    const [mode, setMode] = useState<OfferMode>("domestic");
+    const searchParams = useSearchParams();
+    const [mode, setMode] = useState<OfferMode>(
+        searchParams.get("mode") === "international" ? "international" : "domestic",
+    );
     const [lot, setLot] = useState("");
     const [pickup, setPickup] = useState("");
     const [delivery, setDelivery] = useState("");

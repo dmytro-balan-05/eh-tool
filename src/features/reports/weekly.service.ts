@@ -1,6 +1,8 @@
 import { prisma } from "@/server/db";
 import { getRequestStats } from "@/features/requests/request.service";
 import { countLateDeliveries, mondayOf } from "@/features/late/late.service";
+import { countLatePickups } from "@/features/late/pickup.service";
+import { getReportSettings } from "./settings.service";
 
 function toStr(d: Date) {
     return d.toISOString().slice(0, 10);
@@ -33,6 +35,7 @@ export function lastWeekRange(reference: string) {
 
 export async function buildWeeklyReport(userId: string, reference: string) {
     const range = lastWeekRange(reference);
+    const settings = await getReportSettings(userId);
 
     const offersCount = await prisma.offer.count({
         where: { userId, createdAt: { gte: range.from, lte: range.to } },
@@ -40,6 +43,7 @@ export async function buildWeeklyReport(userId: string, reference: string) {
 
     const requests = await getRequestStats(userId, range.from, range.to);
     const lateCount = await countLateDeliveries(userId, range.weekStart);
+    const pickupCount = await countLatePickups(userId, range.weekStart);
 
     const reports = await prisma.report.findMany({
         where: { userId, date: { in: range.workdays } },
@@ -58,7 +62,9 @@ export async function buildWeeklyReport(userId: string, reference: string) {
         offersCount,
         requests,
         lateCount,
+        pickupCount,
         blockers,
+        settings,
     };
 }
 
@@ -66,13 +72,21 @@ export function formatWeeklyReport(data: Awaited<ReturnType<typeof buildWeeklyRe
     const lines: string[] = [];
     lines.push(`Weekly report (${data.label})`);
     lines.push("");
-    lines.push(`Offers: ${data.offersCount}`);
-
-    const req: string[] = [];
-    req.push(`Int: ${data.requests.international.handled} (Solved ${data.requests.international.solved})`);
-    req.push(`CS: ${data.requests.customerService.handled} (Solved ${data.requests.customerService.solved})`);
-    lines.push(`Requests — ${req.join(", ")}`);
-    lines.push(`Late deliveries: ${data.lateCount}`);
+    if (data.settings.reportOffers) {
+        lines.push(`Offers: ${data.offersCount}`);
+    }
+    if (data.settings.reportRequests) {
+        const req: string[] = [];
+        req.push(`Int: ${data.requests.international.handled} (Solved ${data.requests.international.solved})`);
+        req.push(`CS: ${data.requests.customerService.handled} (Solved ${data.requests.customerService.solved})`);
+        lines.push(`Requests — ${req.join(", ")}`);
+    }
+    if (data.settings.reportLateDel) {
+        lines.push(`Late deliveries: ${data.lateCount}`);
+    }
+    if (data.settings.reportLatePickups) {
+        lines.push(`Late pickups: ${data.pickupCount}`);
+    }
     lines.push("");
     lines.push("Blockers / Issues:");
     if (data.blockers.length === 0) lines.push("- —");
