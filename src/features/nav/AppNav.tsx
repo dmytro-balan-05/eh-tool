@@ -22,18 +22,18 @@ export function AppNav() {
                     EH <span className="text-teal-600 dark:text-teal-400">Tool</span>
                 </Link>
 
-                <div className="ml-auto flex items-center gap-2">
-                    <Link
-                        href="/how-to"
-                        className={`rounded-lg px-3 py-1.5 text-sm transition ${
-                            isActive("/how-to")
-                                ? "bg-gray-100 font-medium text-gray-900 dark:bg-gray-800 dark:text-gray-100"
-                                : "border border-teal-300 font-medium text-teal-700 hover:bg-teal-50 dark:border-teal-800 dark:text-teal-400 dark:hover:bg-teal-950/40"
-                        }`}
-                    >
-                        How to use
-                    </Link>
+                <Link
+                    href="/how-to"
+                    className={`rounded-lg px-3 py-1.5 text-sm transition ${
+                        isActive("/how-to")
+                            ? "bg-gray-100 font-medium text-gray-900 dark:bg-gray-800 dark:text-gray-100"
+                            : "border border-teal-300 font-medium text-teal-700 hover:bg-teal-50 dark:border-teal-800 dark:text-teal-400 dark:hover:bg-teal-950/40"
+                    }`}
+                >
+                    How to use
+                </Link>
 
+                <div className="ml-auto flex items-center gap-2">
                     {session?.user && (
                         <span className="hidden text-xs text-gray-500 md:inline dark:text-gray-400">
                             {session.user.email}
