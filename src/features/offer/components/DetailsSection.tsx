@@ -7,6 +7,8 @@ import type { OfferMode, Warehouse } from "../types";
 type Props = {
     mode: OfferMode;
     lot: string; setLot: (v: string) => void;
+    extraInfo: string; setExtraInfo: (v: string) => void;
+    notes: string; setNotes: (v: string) => void;
     pickup: string; setPickup: (v: string) => void;
     delivery: string; setDelivery: (v: string) => void;
     price: string; setPrice: (v: string) => void;
@@ -81,6 +83,26 @@ export function DetailsSection(p: Props) {
                     )}
                 </div>
             )}
+
+            <div className="mt-3">
+                <label className={label}>Additional info (opt.)</label>
+                <input
+                    value={p.extraInfo}
+                    onChange={(e) => p.setExtraInfo(e.target.value)}
+                    className={input}
+                    placeholder="damaged wheel, missing parts…"
+                />
+            </div>
+
+            <div className="mt-3">
+                <label className={label}>Notes (VIN list, not sent anywhere)</label>
+                <textarea
+                    value={p.notes}
+                    onChange={(e) => p.setNotes(e.target.value)}
+                    className={input + " h-24 resize-y font-mono"}
+                    placeholder="Paste VINs here to keep them handy…"
+                />
+            </div>
         </section>
     );
 }

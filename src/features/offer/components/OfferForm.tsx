@@ -25,6 +25,8 @@ export function OfferForm() {
     const [delivery, setDelivery] = useState("");
     const [price, setPrice] = useState("");
     const [raw, setRaw] = useState("");
+    const [notes, setNotes] = useState("");
+    const [extraInfo, setExtraInfo] = useState("");
     const [warehouseId, setWarehouseId] = useState("");
     const [copied, setCopied] = useState<string | null>(null);
 
@@ -50,7 +52,8 @@ export function OfferForm() {
 
     const message =
         `Hello. Can you pick up ${vind.vehicle || "___"} from ${pickup || "___"} to ${destination || "___"} for ACH payment $${price || "___"}.` +
-        (lot.trim() ? ` Lot#${lot.trim()}` : "");
+        (lot.trim() ? ` Lot#${lot.trim()}` : "") +
+        (extraInfo.trim() ? ` Additional information about the vehicle: ${extraInfo.trim()}` : "");
 
     const offerComplete =
         vind.vin.trim().length > 0 &&
@@ -108,6 +111,7 @@ export function OfferForm() {
         vind.reset();
         setLot(""); setPickup(""); setDelivery(""); setPrice(""); setRaw("");
         setAsrText("");
+        setExtraInfo("");
     }
 
     async function deleteWarehouse(id: string) {
@@ -154,6 +158,8 @@ export function OfferForm() {
                         <DetailsSection
                             mode={mode}
                             lot={lot} setLot={setLot}
+                            extraInfo={extraInfo} setExtraInfo={setExtraInfo}
+                            notes={notes} setNotes={setNotes}
                             pickup={pickup} setPickup={setPickup}
                             delivery={delivery} setDelivery={setDelivery}
                             price={price} setPrice={setPrice}
