@@ -51,7 +51,7 @@ export function OfferForm() {
         : "";
 
     const message =
-        `Hello. Can you pick up ${vind.vehicle || "___"} from ${pickup || "___"} to ${destination || "___"} for ACH payment $${price || "___"}.` +
+        `Hello, it is AutoBidMaster. Can you pick up ${vind.vehicle || "___"} from ${pickup || "___"} to ${destination || "___"} for ACH payment $${price || "___"}.` +
         (lot.trim() ? ` Lot#${lot.trim()}` : "") +
         (extraInfo.trim() ? ` Additional information about the vehicle: ${extraInfo.trim()}` : "");
 
