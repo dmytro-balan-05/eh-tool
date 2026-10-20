@@ -51,9 +51,13 @@ export function OfferForm() {
         : "";
 
     const message =
-        `Hello, it is AutoBidMaster. Can you pick up ${vind.vehicle || "___"} from ${pickup || "___"} to ${destination || "___"} for ACH payment $${price || "___"}.` +
-        (lot.trim() ? ` Lot#${lot.trim()}` : "") +
-        (extraInfo.trim() ? ` Additional information about the vehicle: ${extraInfo.trim()}` : "");
+        `Hello, it is AutoBidMaster.\n` +
+        `Can you pick up ${vind.vehicle || "___"}?\n\n` +
+        `From: ${pickup || "___"}\n` +
+        `To: ${destination || "___"}\n` +
+        `Payment: $${price || "___"} ACH\n` +
+        (lot.trim() ? `Lot#: ${lot.trim()}\n` : "") +
+        (extraInfo.trim() ? `\nAdditional information about the vehicle: ${extraInfo.trim()}` : "");
 
     const offerComplete =
         vind.vin.trim().length > 0 &&
