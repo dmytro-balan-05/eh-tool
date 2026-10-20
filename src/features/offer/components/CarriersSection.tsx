@@ -35,7 +35,6 @@ export function CarriersSection({ raw, setRaw, detected, phones, onCopyPhones, c
             <textarea
                 value={raw}
                 onChange={(e) => setRaw(e.target.value)}
-                onFocus={(e) => e.target.select()}
                 className={input + " h-32 resize-y font-mono"}
                 placeholder="TVM Inc Regular   $500.00   (516) 324-8989"
             />
